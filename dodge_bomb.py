@@ -60,6 +60,26 @@ def gameover(screen: pg.Surface) -> None:
     pg.display.update()
     time.sleep(5)
 
+
+def init_bb_imgs() -> tuple[list[pg.Surface], list[int]]:
+    """
+    爆弾の大きさと加速倍率のリストを生成する
+    戻り値: (爆弾Surfaceリスト, 加速度リスト)
+    """
+    bb_imgs = []
+    bb_accs = []
+    for r in range(1, 11):  # 1～10段階
+        bb_img = pg.Surface((20*r, 20*r))
+        pg.draw.circle(bb_img, (255, 0, 0), (10*r, 10*r), 10*r)
+        bb_img.set_colorkey((0, 0, 0))  # 黒背景を透明化
+        bb_imgs.append(bb_img)
+        bb_accs.append(r)
+    return bb_imgs, bb_accs
+
+
+
+
+
 def main():
     pg.display.set_caption("逃げろ！こうかとん")
     screen = pg.display.set_mode((WIDTH, HEIGHT))
@@ -67,11 +87,15 @@ def main():
     kk_img = pg.transform.rotozoom(pg.image.load("fig/3.png"), 0, 0.9)
     kk_rct = kk_img.get_rect()
     kk_rct.center = 300, 200
-    bb_img=pg.Surface((20,20))  # 空のSurface
-    pg.draw.circle(bb_img,(255, 0, 0), (10, 10), 10)  # 赤い爆弾
-    bb_img.set_colorkey((0, 0, 0))  # 四隅の黒い部分を透明化
-    bb_rct = bb_img.get_rect()  # 爆弾Rect
-    bb_rct.centery=random.randint(0, WIDTH)  # 爆弾横座標
+    # bb_img=pg.Surface((20,20))  # 空のSurface
+    # pg.draw.circle(bb_img,(255, 0, 0), (10, 10), 10)  # 赤い爆弾
+    # bb_img.set_colorkey((0, 0, 0))  # 四隅の黒い部分を透明化
+    # bb_rct = bb_img.get_rect()  # 爆弾Rect
+     # 爆弾：拡大&加速用のリストを準備
+    bb_imgs, bb_accs = init_bb_imgs()
+    bb_rct = bb_imgs[0].get_rect()
+
+    bb_rct.centerx=random.randint(0, WIDTH)  # 爆弾横座標
     bb_rct.centery=random.randint(0,HEIGHT)  # 爆弾縦座標
     vx, vy = +5, +5
     clock = pg.time.Clock()
@@ -103,9 +127,17 @@ def main():
         kk_rct.move_ip(sum_mv)
         if check_bound(kk_rct) != (True,True):
             kk_rct.move_ip(-sum_mv[0], -sum_mv[1])
-
         screen.blit(kk_img, kk_rct)
-        bb_rct.move_ip(vx,vy)  # 爆弾移動
+
+        # 爆弾の拡大・加速：tmrに応じて段階を選ぶ（最大9）
+        idx = min(tmr // 500, 9)
+        bb_img = bb_imgs[idx]
+        avx = vx * bb_accs[idx]
+        avy = vy * bb_accs[idx]
+        
+       
+        screen.blit(kk_img, kk_rct)
+        bb_rct.move_ip(avx,avy)  # 爆弾移動
         yoko, tate=check_bound(bb_rct)
         if not yoko:   # 横方向に葉も出ていたら
             vx*= -1
