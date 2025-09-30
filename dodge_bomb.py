@@ -34,6 +34,7 @@ def gameover(screen: pg.Surface) -> None:
     """
     ゲームオーバー画面を表示する関数
     黒背景に「Game Over」と泣きこうかとん画像を5秒表示
+    戻り値：なし
     """
     # 黒いSurface半透明化
     blackout = pg.Surface((WIDTH, HEIGHT))
